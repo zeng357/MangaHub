@@ -1,0 +1,7 @@
+本目录存放：主程序全部 Python 源码与配置。
+
+- gui.py / main.py：主界面与程序入口
+- crawler.py / downloader.py / download_flow.py：站点采集、图片下载核心
+- config.py / config.json：配置
+- utils.py：通用工具
+- 一键启动.bat：双击启动（需 Python 3.10）
