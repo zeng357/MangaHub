@@ -1,4 +1,4 @@
-# MangaHub · Multi-Site Manga Downloader
+# MangaNest · Multi-Site Manga Downloader
 
 > 📖 Full usage guide: **Docs/Usage.md** (main UI walkthrough + download flow + adding sites + FAQ)
 
@@ -139,10 +139,10 @@ Double-click **`start.bat`** after extraction (the script auto-detects Python, c
 
 ### Standalone EXE Build (recommended for non-Python users)
 
-`MangaHub.exe` (single-file PyInstaller build with DrissionPage bundled) is available in the release package:
+`MangaNest.exe` (single-file PyInstaller build with DrissionPage bundled) is available in the release package:
 
 1. Download & extract (the **exe must stay in the same folder as `sites_data`, `自定义站点`, `config.json`**)
-2. Double-click `MangaHub.exe` — no Python installation needed
+2. Double-click `MangaNest.exe` — no Python installation needed
 
 > Site folders (`sites_data`, `自定义站点`) are read from the exe's directory; don't move the exe alone.
 
