@@ -1,173 +1,173 @@
-# MangaHub · 漫聚下载器（通用漫画下载器 章节表版）
+# MangaHub · Multi-Site Manga Downloader
 
-> 📖 使用说明见：**《使用说明.md》**（主界面各功能区 + 下载流程 + 添加站点 + 常见问题）（章节表版）
+> 📖 Full usage guide: **Docs/Usage.md** (main UI walkthrough + download flow + adding sites + FAQ)
 
-一个可运行在 Windows 电脑上的漫画下载工具，支持**多个漫画网站**：内置爬虫 + 自定义站点适配器（JSON 规则）体系，还带**自动分析站点**向导——输入任意新网站，程序自动分析搜索/章节/图片结构并生成可保存的适配器，永久复用。
+A manga downloader that runs on Windows and supports **multiple manga websites**: built-in crawlers + custom site adapters (JSON rules) + an **Auto Site Analyzer** wizard — paste any new website, the program automatically analyzes its search/chapter/image structure and generates a reusable adapter.
 
 ---
 
-## 一、界面使用说明
+## 1. UI Guide
 
-程序启动后（双击「一键启动.bat」）打开主界面，从上到下依次是：
+After launch (double-click `start.bat`), the main window contains:
 
-| 区域 | 操作说明 |
+| Area | Description |
 |---|---|
-| **站点选择** | 下拉框选择漫画网站（内置站点 + 自定义适配器站点都在这里） |
-| **漫画名输入框** | 输入漫画名称（如：示例漫画A、示例漫画B） |
-| **搜索按钮** | 在所选网站搜索该漫画；搜索后下方会列出候选漫画，点击候选自动填入并打开详情页 |
-| **需要登录** | 勾选后，打开章节前会先执行登录流程：`打开登录`（弹出浏览器登录页）→ 扫码/账号登录 → `登录完成`（保存 Cookie）。**下载需要登录才能看的章节时必须勾选** |
-| **加载章节表** | 读取该漫画的全部章节（显示章节序号 + 章节名），生成可勾选列表 |
-| **章节表** | 全选/勾选要下载的章节；支持只勾选部分章节、选择章节范围 |
-| **开始下载** | 按勾选顺序下载所选章节的全部图片（自动创建"漫画名/章节名/图片.jpg"目录结构） |
-| **下载失败图片** | 单独重试之前下载失败的图片 |
-| **失败重试** | 批量重试失败的章节 |
-| **下载进度/日志窗口** | 实时显示每一步日志（搜索→章节→图片→下载→封面），出错原因会直接显示在这里 |
+| **Site selector** | Dropdown to choose a manga website (built-in sites + your custom adapters) |
+| **Comic name input** | Type the manga title (e.g. Sample Manga A, Sample Manga B) |
+| **Search button** | Searches the selected site; candidates are listed below; click one to auto-fill and open its detail page |
+| **Need login** | When checked, a login flow runs before opening chapters: `Open Login` (pops a browser login page) → scan QR / sign in → `Login Done` (cookies saved). **Required for chapters that need login.** |
+| **Load chapter list** | Reads all chapters of the comic (chapter number + name), builds a checkable list |
+| **Chapter list** | Select/deselect chapters to download; supports partial selection and range selection |
+| **Start download** | Downloads all images of the selected chapters in order (auto-creates `ComicName/ChapterName/image.jpg`) |
+| **Retry failed images** | Retries previously failed image downloads |
+| **Retry failed chapters** | Batch-retries failed chapters |
+| **Progress / log window** | Real-time logs of every step (search → chapters → images → download → cover) |
 
-下载完成后的目录结构：
+Folder structure after download:
 
 ```
-示例漫画/
-├── 0/cover.jpg                 # 封面
-├── 128 最终章·新的开始/
+Sample Manga/
+├── 0/cover.jpg                 # cover
+├── 128 Final Chapter·A New Start/
 │   ├── 1.jpg
 │   ├── 2.jpg
 │   └── ...
-└── 127 番外篇/
+└── 127 Bonus Story/
     ├── 1.jpg
     └── ...
 ```
 
-> 黑窗口不要关闭：程序下载依赖它显示进度；想完全退出时关闭黑色控制台窗口或关闭主界面即可。
+> Do not close the black console window — the program prints progress there. To fully exit, close the console or the main window.
 
 ---
 
-## 二、支持的网站
+## 2. Supported Sites
 
-**内置爬虫**（代码级适配，最稳定）：
+**Built-in crawlers** (code-level adapters, most stable):
 
-| 站点 | 说明 |
+| Site | Notes |
 |---|---|
-| 腾讯动漫 ac.qq.com | 章节表含章节名；图片直接采集；需登录/会员才能下全的章节会自动提示 |
-| 漫蛙、拷贝漫画、其他内置站 | 各站内建适配 |
+| Tencent Anime ac.qq.com | Chapter list includes names; images fetched directly; chapters requiring login/VIP are auto-detected and prompted |
+| Manwa, Copymanga and other built-in sites | Built-in adapters |
 
-**自定义适配器站点**（`自定义站点/*_适配器.json`，随程序预置）：
+**Custom adapter sites** (preloaded in `自定义站点/*_适配器.json`):
 
-| 适配器 | 站点 | 特点 |
+| Adapter | Site | Highlights |
 |---|---|---|
-| `kanman_适配器.json` | 看漫画 kanman.com | 章节图片URL直接在页面JS变量中，全量可靠 |
-| `zymk_适配器.json` | 知音漫客 zymk.cn | 章节页跳转 kanman，规则已兼容 |
-| `cosz_适配器.json` | C站图集 cosz.com | WordPress 图集站，支持懒加载 data-src |
-| `漫蛙漫画_适配器.json` | 漫蛙 | 适配器写法示例 |
+| `kanman_适配器.json` | kanman.com | Chapter image URLs live in page JS variable — full & reliable |
+| `zymk_适配器.json` | zymk.cn | Chapter pages redirect to kanman; rules compatible |
+| `cosz_适配器.json` | cosz.com | WordPress gallery; lazy-loaded data-src supported |
+| `漫蛙漫画_适配器.json` | Manwa | Sample adapter |
 
-> 说明：**付费/VIP 章节**受网站账号权限限制（游客只能看预览页），登录后可下免费章节全量；VIP 付费章节需对应会员账号，程序不会绕过付费墙。
+> **Paid/VIP chapters** are limited by site account permissions (guests see preview pages only). After login, free chapters download fully; VIP chapters require the corresponding membership — this tool does not bypass paywalls.
 
 ---
 
-## 三、添加任意新网站（自动分析向导）
+## 3. Add Any New Website (Auto Analyzer Wizard)
 
-主界面打开「自动分析站点」，按四步走：
+Open **Auto Analyze Site** from the main UI and follow four steps:
 
-1. **打开并分析**：输入新网站首页地址，程序自动分析搜索框、搜索入口结构
-2. **开始试搜**：输入一个关键词试搜，程序列出候选漫画链接（可筛选、修正规则）
-3. **分析章节**：打开选中漫画详情页，程序滚动/翻页识别全部章节（含章节名）
-4. **分析图片 → 保存适配器**：程序打开章节页分析图片结构，生成规则并**保存为 `自定义站点/新站点_适配器.json`**，之后永久可用
+1. **Open & analyze**: paste the homepage URL; the program detects the search box and search entry
+2. **Trial search**: type a keyword; the program lists candidate comic links (filterable & correctable)
+3. **Analyze chapters**: open the selected comic's detail page; the program scrolls/paginates to detect all chapters (with names)
+4. **Analyze images → save adapter**: opens a chapter page, analyzes image structure, generates rules and **saves as `自定义站点/NewSite_适配器.json`** — reusable forever
 
-保存后刷新站点列表，就能像内置站点一样搜索、加载章节表、下载。
+After saving, refresh the site list and the new site works like a built-in one.
 
-### 适配器 JSON 字段说明
+### Adapter JSON Fields
 
 ```json
 {
-  "site_name": "站点显示名",
-  "site_url": "https://站点.com/",
+  "site_name": "Site display name",
+  "site_url": "https://site.com/",
   "search": {
     "mode": "get",
-    "url_template": "https://站点.com/search?keyword={kw}",
-    "result_js": "return []; // 从页面提取漫画链接 [{url,title},...]"
+    "url_template": "https://site.com/search?keyword={kw}",
+    "result_js": "return []; // extract comic links [{url,title},...] from the page"
   },
   "detail": {
-    "chapters_js": "return []; // 提取章节链接 [{url,title},...]",
+    "chapters_js": "return []; // extract chapter links [{url,title},...]",
     "chapters_scroll": false,
     "chapters_reverse": false,
-    "cover_js": "return '';  // 封面图URL"
+    "cover_js": "return '';  // cover image URL"
   },
   "chapter": {
-    "images_js": "return [];  // 章节图片URL数组",
+    "images_js": "return [];  // chapter image URLs",
     "scroll_to_load": false
   }
 }
 ```
 
-- `chapters_scroll: true`：章节列表懒加载时，自动滚动+点"查看更多"直到全部加载
-- `scroll_to_load: true`：章节页图片懒加载时，先滚动再取图
+- `chapters_scroll: true`: scroll + click "Load more" until the whole lazy-loaded chapter list is loaded
+- `scroll_to_load: true`: scroll to bottom first when chapter images are lazy-loaded
 
 ---
 
-## 四、环境与安装
+## 4. Environment & Installation
 
-**需要 Python 3.10**（本程序验证环境：`Python 3.10.10`），依赖：
+**Requires Python 3.10** (verified on `Python 3.10.10`), dependencies:
 
 ```
 DrissionPage
 aiohttp
 aiofiles
-execjs        # 需要电脑装有 Node.js
+execjs        # requires Node.js installed
 pycryptodome
 requests
 requests_file
 lxml
 ```
 
-**安装依赖**（管理员命令行）：
+**Install dependencies** (admin command line):
 
 ```bat
 pip install DrissionPage aiohttp aiofiles execjs pycryptodome requests requests_file lxml
 ```
 
-Node.js：到 https://nodejs.org/ 下载安装（execjs 运行时）。
+Node.js: download from https://nodejs.org/ (runtime for execjs).
 
-## 五、一键启动
+## 5. One-Click Start
 
-解压后双击 **`一键启动.bat`** 即可（脚本自动检测 Python、检查网络和依赖、启动图形界面）。
+Double-click **`start.bat`** after extraction (the script auto-detects Python, checks network & dependencies, then launches the GUI).
 
-> 若提示缺模块：`pip install <模块名>` 后再启动。
+> If a module is missing: `pip install <module>` and start again.
 
-## 八、添加你自己的网站爬虫（两种方式）
+## 8. Add Your Own Site Crawler (Two Ways)
 
-- **不会写代码**：主界面「自动分析站点」四步向导 / 「新建适配器」，生成 JSON 适配器（详见《如何添加新站点.md》）
-- **会写 Python**：主界面「爬虫源码管理器」窗口 →「从模板新建」→ 改几处 → 保存，源码存到 `sites_data/` 自动加载（详见《如何添加自定义爬虫.md》）
+- **No coding**: use the **Auto Analyze Site** wizard or **New Adapter** in the main UI to generate a JSON adapter (see `Docs/How-to-Add-a-New-Site.md`)
+- **Python coder**: use the **Crawler Source Manager** window → **New from template** → tweak → save; source goes to `sites_data/` and is loaded automatically (see `Docs/How-to-Add-a-Custom-Crawler.md`)
 
-### 免安装打包版（推荐给不熟悉 Python 的用户）
+### Standalone EXE Build (recommended for non-Python users)
 
-仓库/发布包内提供 `通用漫画下载器.exe`（PyInstaller 单文件打包，已内置 DrissionPage 依赖）：
+`MangaHub.exe` (single-file PyInstaller build with DrissionPage bundled) is available in the release package:
 
-1. 下载发布包并解压（**exe 必须与 `sites_data`、`自定义站点`、`config.json` 放在同一目录**）
-2. 双击 `通用漫画下载器.exe` 即可运行，无需安装 Python
+1. Download & extract (the **exe must stay in the same folder as `sites_data`, `自定义站点`, `config.json`**)
+2. Double-click `MangaHub.exe` — no Python installation needed
 
-> 站点目录（`sites_data`、`自定义站点`）从 exe 所在目录读取，请不要单独移动 exe。
+> Site folders (`sites_data`, `自定义站点`) are read from the exe's directory; don't move the exe alone.
 
 ---
 
-## 六、常见问题（FAQ）
+## 6. FAQ
 
-| 问题 | 原因与解决 |
+| Issue | Cause & Fix |
 |---|---|
-| 黑色窗口一闪而过 | bat 文件被改成 LF 换行/编码问题，用包里原版 bat；或命令行手动 `python gui.py` |
-| 提示 No module named 'xxx' | 缺少依赖，按第四节安装 |
-| 章节表只有数字没有章节名 | 旧版 bug，已修复；新版显示"第N话 章节名" |
-| 某章只下到1~2张图 | 该章为付费/需登录章节，游客只有预览页；勾选"需要登录"登录后重下 |
-| 搜索出现无关内容 | 部分网站搜索接口本身不按关键词过滤（如 kanman 显示热门榜），适配器已做关键词过滤+列表兜底 |
-| 章节数不全/无法到下一页 | 懒加载站点需滚动触发，新版已自动滚动+翻页采集 |
-| 下载图片混入UI图 | 已限制只采章节容器内的真图 |
+| Black window flashes and closes | The bat file was edited (LF line endings/encoding). Use the original bat; or run `python gui.py` manually |
+| `No module named 'xxx'` | Missing dependency — install per Section 4 |
+| Chapter list shows numbers only | Old bug, fixed; new version shows "Chapter N · name" |
+| A chapter downloads only 1–2 images | It's a paid/login chapter; guests see a preview only. Check "Need login", log in, retry |
+| Search returns unrelated results | Some sites' search API ignores keywords (e.g. kanman shows hot list); adapters apply keyword filtering + list fallback |
+| Missing chapters / can't reach next page | Lazy-loaded sites need scrolling; new version auto-scrolls & paginates |
+| UI images mixed into downloads | Restricted to real images inside the chapter container |
 
 ---
 
-## 七、免责声明（详见包内「免责声明.txt」）
+## 7. Disclaimer (bilingual in `Docs/DISCLAIMER.txt`)
 
-1. 本软件**仅供个人学习、研究与技术交流使用，严禁商用**。
-2. 下载内容版权归原作者/平台所有，请**下载后 24 小时内删除**，并支持正版。
-3. 使用者须遵守目标网站的服务条款；使用本软件产生的一切后果由使用者自行承担。
-4. 本软件**不提供任何绕过付费墙/破解会员/盗版传播功能**；VIP 内容需在平台开通对应权限。
-5. 本软件按“现状”提供，作者对适用性、稳定性及内容完整性不作担保，不承担任何直接或间接损失。
+1. For **personal learning & research only — no commercial use**.
+2. Downloaded content belongs to the original authors/platforms; **delete within 24 hours** and support the official releases.
+3. Users must comply with target sites' terms of service; all consequences are the user's own responsibility.
+4. This tool **does not bypass paywalls, crack memberships, or aid piracy**; VIP content requires the proper entitlement on the platform.
+5. Provided "as is" — no warranty on fitness, stability, or completeness; no liability for any direct or indirect loss.
 
-使用本软件即视为同意以上条款。
+Using this software means you agree to the above terms.
