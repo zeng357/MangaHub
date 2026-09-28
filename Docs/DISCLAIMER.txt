@@ -1,0 +1,25 @@
+# DISCLAIMER / 免责声明
+
+## English
+
+1. This software (MangaHub) is provided **for personal learning, research and technical exchange only. Commercial use is strictly prohibited.**
+2. The copyright of downloaded comics and images belongs to the original authors and copyright holders. **Please delete downloaded content within 24 hours and support official channels / purchase the legitimate copies.**
+3. Users must comply with the user agreements and terms of service of the target websites (manga platforms). All legal consequences arising from the use of this software are borne by the user.
+4. This software is for learning web-scraping techniques only. It **does not provide any functionality to bypass paywalls, crack memberships, or distribute pirated content.** Paid/VIP content must be properly entitled on the platform before it can be accessed.
+5. This software is provided "as is". The author makes no express or implied warranty of fitness, stability, or completeness of downloaded content, and bears no responsibility for any direct or indirect loss caused by its use.
+6. Please support official manga and respect the work of creators.
+
+By using this software, you agree to all of the above terms.
+
+---
+
+## 中文
+
+1. 本软件（MangaHub 漫聚下载器）**仅供个人学习、研究与技术交流使用，严禁用于任何商业用途。**
+2. 本软件下载的漫画、图片等内容，其版权归原作者及版权方所有。**请在下载后 24 小时内删除，并支持正版渠道购买/阅读。**
+3. 使用者应遵守目标网站（漫画平台）的用户协议与服务条款，因使用本软件产生的一切法律后果由使用者自行承担。
+4. 本软件仅用于学习网页采集技术，**不提供任何绕过付费墙、破解会员、盗版传播的功能**；付费/VIP 内容需在平台开通对应权限后方可正常获取。
+5. 本软件按"现状"提供，作者不对软件的适用性、稳定性及下载内容的完整性作任何明示或默示的担保；因使用本软件造成的任何直接或间接损失，作者不承担任何责任。
+6. 请支持正版漫画，尊重创作者劳动成果。
+
+使用者开始使用本软件即视为同意以上全部条款。
