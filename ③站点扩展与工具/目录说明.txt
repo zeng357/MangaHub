@@ -1,5 +1,0 @@
-本目录存放：站点发现与扩展模块。
-
-- site_discovery.py：扫描加载 sites_data 站点
-- site_analyzer.py + site_analyzer_gui.py：自动分析任意网站四步向导
-- crawler_manager.py：爬虫源码管理器（添加/编辑自定义爬虫源码窗口）
