@@ -1,4 +1,4 @@
-# MangaHub · Usage Guide
+# MangaNest · Usage Guide
 
 A multi-site manga downloader (chapter-list edition). Supports Tencent Anime, kanman, zymk, cosz, Manwa and other built-in sites, plus **any manga website** (JSON adapter / Python crawler source).
 
@@ -9,7 +9,7 @@ A multi-site manga downloader (chapter-list edition). Supports Tencent Anime, ka
 | Version | How to start |
 |---|---|
 | **Source version** | Extract → double-click `start.bat` (requires Python 3.10 + dependencies, see README) |
-| **Standalone EXE** | Extract → double-click `MangaHub.exe` (no Python needed) |
+| **Standalone EXE** | Extract → double-click `MangaNest.exe` (no Python needed) |
 
 > Note: the exe must stay in the **same folder** as `sites_data`, `自定义站点`, `config.json`. Don't move the exe alone.
 

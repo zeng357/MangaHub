@@ -1,4 +1,4 @@
-# MangaHub · Chapter-List Feature Notes
+# MangaNest · Chapter-List Feature Notes
 
 This document describes the **chapter-list (checkable download)** feature added to the main program source, plus the yumanhua.com site crawler.
 
@@ -27,12 +27,12 @@ Existing site crawler download interfaces are unchanged; the original "chapter r
 
 ## 3. How to Rebuild Into a Runable Program
 
-In the **MangaHub** directory (the one containing `build.bat`), **double-click `build.bat`**:
+In the **MangaNest** directory (the one containing `build.bat`), **double-click `build.bat`**:
 1. Automatically installs DrissionPage and PyInstaller (requires network);
-2. Builds a single-file `dist\MangaHub.exe` (no console window);
+2. Builds a single-file `dist\MangaNest.exe` (no console window);
 3. Automatically copies sites_data, config, cookies into `dist\`.
 
-Then double-click `dist\MangaHub.exe` to run. Keep the whole `dist\` folder (the exe must stay with sites_data).
+Then double-click `dist\MangaNest.exe` to run. Keep the whole `dist\` folder (the exe must stay with sites_data).
 
 > Note: this change was syntax/static-checked locally (21 files compiled). Because the session had no network and no browser, packaging/run verification wasn't done here; run `build.bat` on your own machine for the final build and real verification.
 
