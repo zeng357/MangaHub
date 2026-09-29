@@ -6,16 +6,25 @@ A manga downloader that runs on Windows and supports multiple manga websites: bu
 
 **v1.1 new features**: 🔄 **Format Converter page** (turn downloaded manga images into PDF / CBZ / EPUB / MOBI e-books — one-click whole-book merge, multi-folder merge, automatic original cover), **startup self-check** (writes diagnostic logs), **one-click network-stack repair** script.
 
+**v1.1.1 new features**: 🔐 **Secure Login Vault** — login sessions are now stored in an **AES-256-GCM encrypted container**:
+- **Device-bound**: opens automatically on THIS PC (hardware fingerprint) — no password needed
+- **Password unlock** for other computers (PBKDF2 200k iterations)
+- **Auto-destroy**: 4 wrong passwords → all saved login data is permanently destroyed
+- **Password rule**: at least 6 characters, must contain **letters + digits + symbols** (e.g. `Abc@123`)
+- **Auto-login**: after logging in once, the program automatically uses the saved container — no more QR scans
+- New **🔐 Password Manager** page (fold menu in the sidebar): view container status / set & change password / test password / clear container
+
 ---
 
 ## 1. UI Guide
 
-After launch (double-click `start.bat`), the main window has three pages in the left sidebar:
+After launch (double-click `start.bat`), the main window has three pages in the left sidebar (plus a collapsible **🔐 Password Manager** menu below Format Converter):
 
 | Page | Purpose |
 |---|---|
 | 🏠 **Home** | Download comics: site selector, search, load chapter list, start download |
 | 🔄 **Format Converter** | Merge downloaded manga images into e-books (PDF/CBZ/EPUB/MOBI) |
+| 🔐 **Password Manager** | Click `🔐 密码管理 ▸` to expand → open the vault manager page (encrypted login containers) |
 | ⚙ **Settings** | Image naming, window, download and browser options |
 
 ### 🏠 Home (download)
@@ -25,7 +34,7 @@ After launch (double-click `start.bat`), the main window has three pages in the 
 | **Site selector** | Dropdown to choose a manga website (built-in sites + your custom adapters) |
 | **Comic name input** | Type the manga title |
 | **Search button** | Searches the selected site; candidates are listed below; click one to auto-fill and open its detail page |
-| **Need login** | When checked, a login flow runs before opening chapters: Open Login (browser login page) → scan QR / sign in → Login Done (Cookie saved). **Required for chapters that need login** |
+| **Need login** | When checked, a login flow runs before opening chapters: Open Login (browser login page) → scan QR / sign in → Login Done. **Login is saved as an encrypted container** (v1.1.1): next time the site needs login, the program auto-logs-in with the saved container — no QR scan needed. On this PC it unlocks automatically; on another PC you enter the container password; 4 wrong passwords destroy the container |
 | **Load chapter list** | Reads all chapters of the comic (number + name), builds a checkable list |
 | **Chapter list** | Select chapters to download (all / partial / range) |
 | **Start download** | Downloads all images of the selected chapters (auto-creates `comic/chapter/1.jpg` structure) |
@@ -47,6 +56,23 @@ ComicName/
 ```
 
 > Keep the console window open while downloading; close it or the main window to quit.
+
+### 🔐 Secure Login Vault (v1.1.1)
+
+Login sessions are stored in **encrypted containers** (`cookies/<site>_cookies.json`, AES-256-GCM + PBKDF2):
+
+| Behavior | Description |
+|---|---|
+| **This PC** | Opens automatically via hardware fingerprint — you are never asked |
+| **Another PC** | Requires the **container password** (set when login completes, or in Password Manager) |
+| **4 wrong passwords** | The container **destroys itself** — all saved login data is wiped permanently |
+| Password rule | ≥ 6 chars, must contain **letters + digits + symbols** |
+
+**Password Manager page** (sidebar → `🔐 密码管理 ▸` → open):
+- View each site's container status (encrypted / needs password / destroyed / none)
+- Set or change the container password (no old password needed on this PC)
+- Test a password (careful: wrong attempts count, 4 = destroy)
+- Clear a container (delete that site's saved login, requires re-login)
 
 ### 🔄 Format Converter page (merge manga into a book)
 
