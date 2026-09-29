@@ -17,6 +17,8 @@ from site_discovery import get_all_site_names, get_sites_requiring_login, get_si
 from site_discovery import (get_custom_sites_dir, is_rule_site, get_adapter_by_site_name,
                             save_custom_adapter, delete_custom_adapter, validate_adapter)
 from site_analyzer_gui import SiteAnalyzerDialog
+from converter import FORMATS, convert_comic_folder, convert_merge_folders
+import selftest
 
 
 # 图片命名补零选项: (显示文本, 补零位数)，默认3位在前
@@ -95,6 +97,20 @@ class GenericComicDownloaderGUI:
         self.crawler = None
         self.login_window_open = False
         self.cookies_dir = self.load_config().get('cookies_dir', DEFAULT_COOKIES_DIR)
+
+        # 启动自检：结果自动写入 startup_diag.log，有问题则弹窗提示
+        try:
+            _diag_ok, _diag_err, _dl, diag_path = selftest.run_selftest()
+            if _diag_err:
+                self.root.after(800, lambda: messagebox.showwarning(
+                    "自检发现异常",
+                    "程序自检发现异常，详细日志已写入：\n" + diag_path +
+                    "\n\n常见原因：①依赖模块未安装 ②系统网络故障（WinError 10038，"
+                    "建议重启电脑或管理员运行 netsh winsock reset 后重启）\n" +
+                    "不影响格式转换（纯本地功能）。",
+                    parent=self.root))
+        except Exception:
+            pass
         
         # 外层容器：左侧边栏 + 右侧内容区（不使用Canvas滚动）
         self.root_container = ttk.Frame(root)
@@ -128,6 +144,15 @@ class GenericComicDownloaderGUI:
             command=lambda: self.show_page('main')
         )
         self.nav_main_btn.pack(fill=tk.X, padx=6, pady=2)
+        self.nav_convert_btn = tk.Button(
+            self.sidebar, text="🔄 格式转换", font=("微软雅黑", 11),
+            bg=SIDEBAR_BG, fg=NAV_TEXT,
+            activebackground=SIDEBAR_HOVER_BG, activeforeground="#ffffff",
+            relief=tk.FLAT, bd=0, highlightthickness=0,
+            anchor="w", padx=14, pady=9, cursor="hand2",
+            command=lambda: self.show_page('convert')
+        )
+        self.nav_convert_btn.pack(fill=tk.X, padx=6, pady=2)
         self.nav_settings_btn = tk.Button(
             self.sidebar, text="⚙ 设置", font=("微软雅黑", 11),
             bg=SIDEBAR_BG, fg=NAV_TEXT,
@@ -595,6 +620,8 @@ class GenericComicDownloaderGUI:
 
         # 恢复上次保存的下载设置
         self.apply_saved_config()
+        # 构建『格式转换』页（侧边栏第三页）
+        self._build_convert_page()
         # 初始显示主页面
         self.show_page('main')
     
@@ -748,18 +775,30 @@ class GenericComicDownloaderGUI:
             self.append_status("已关闭：下载完成后不生成压缩包")
 
     def show_page(self, page_name):
-        """左侧边栏页面切换：'main' 主页面 / 'settings' 设置页面"""
+        """左侧边栏页面切换：'main' 主页 / 'settings' 设置 / 'convert' 格式转换"""
         if page_name == 'main':
+            try:
+                self.page_convert.pack_forget()
+            except Exception:
+                pass
             self.page_settings.pack_forget()
             self.page_main.pack(fill=tk.BOTH, expand=True)
+        elif page_name == 'convert':
+            self.page_main.pack_forget()
+            self.page_settings.pack_forget()
+            self.page_convert.pack(fill=tk.BOTH, expand=True)
         else:
             self.page_main.pack_forget()
+            try:
+                self.page_convert.pack_forget()
+            except Exception:
+                pass
             self.page_settings.pack(fill=tk.BOTH, expand=True)
         self._update_nav_highlight(page_name)
 
     def _update_nav_highlight(self, page_name):
         """更新侧边栏导航按钮的选中高亮（选中蓝底白字，未选中与侧栏底色融合）"""
-        for btn, name in ((self.nav_main_btn, 'main'), (self.nav_settings_btn, 'settings')):
+        for btn, name in ((self.nav_main_btn, 'main'), (self.nav_settings_btn, 'settings'), (self.nav_convert_btn, 'convert')):
             if name == page_name:
                 btn.config(bg=NAV_SELECTED_BG, fg=NAV_SELECTED_TEXT,
                            activebackground=NAV_SELECTED_HOVER_BG)
@@ -1575,9 +1614,332 @@ class GenericComicDownloaderGUI:
         except Exception as e:
             self.append_status(f"打开目录失败: {e}")
 
+    # ==================== 格式转换页（第三页） ====================
+
+    def _build_convert_page(self):
+        """构建『格式转换』页：已下载的漫画图片 → PDF/CBZ/EPUB/MOBI，支持批量"""
+        self.page_convert = ttk.Frame(self.main_frame)
+        self.page_convert.columnconfigure(0, weight=1)
+
+        ttk.Label(
+            self.page_convert,
+            text="格式转换：把已下载的漫画图片（JPG/PNG等）批量转换成常用阅读格式",
+            font=("微软雅黑", 10),
+        ).grid(row=0, column=0, sticky='w', padx=12, pady=(6, 2))
+
+        # ---- 来源列表 ----
+        src_frame = ttk.LabelFrame(self.page_convert, text="① 选择漫画文件夹（可多选，批量处理）", style="Card.TLabelframe")
+        src_frame.grid(row=1, column=0, sticky='ew', padx=12, pady=6)
+        src_frame.columnconfigure(0, weight=1)
+
+        btn_row = ttk.Frame(src_frame)
+        btn_row.grid(row=0, column=0, sticky='w', pady=4)
+        ttk.Button(btn_row, text="添加文件夹", command=self.conv_add_folders, width=12).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_row, text="扫描子目录批量添加", command=self.conv_scan_subdirs, width=18).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_row, text="移除选中", command=self.conv_remove_selected, width=10).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_row, text="清空列表", command=self.conv_clear_list, width=10).pack(side=tk.LEFT, padx=2)
+
+        self.conv_list_frame = ttk.Frame(src_frame)
+        self.conv_list_frame.grid(row=1, column=0, sticky='ew', pady=2)
+        self.conv_list_frame.columnconfigure(0, weight=1)
+
+        self.conv_listbox = tk.Listbox(self.conv_list_frame, height=6, selectmode=tk.EXTENDED, font=("微软雅黑", 9))
+        self.conv_listbox.grid(row=0, column=0, sticky='ew')
+        conv_scroll = ttk.Scrollbar(self.conv_list_frame, command=self.conv_listbox.yview)
+        conv_scroll.grid(row=0, column=1, sticky='ns')
+        self.conv_listbox.configure(yscrollcommand=conv_scroll.set)
+
+        # ---- 转换设置 ----
+        set_frame = ttk.LabelFrame(self.page_convert, text="② 转换设置", style="Card.TLabelframe")
+        set_frame.grid(row=2, column=0, sticky='ew', padx=12, pady=6)
+        set_frame.columnconfigure(1, weight=1)
+
+        ttk.Label(set_frame, text="目标格式:").grid(row=0, column=0, sticky='e', padx=(0, 8), pady=4)
+        self.conv_fmt_var = tk.StringVar(value=FORMATS[0])
+        ttk.Combobox(set_frame, textvariable=self.conv_fmt_var, values=FORMATS, width=10, state="readonly").grid(row=0, column=1, sticky='w', pady=4)
+        ttk.Label(set_frame, text="PDF通用 / CBZ漫画阅读器 / EPUB电子书 / MOBI需安装Calibre", font=("微软雅黑", 8), foreground="gray").grid(row=0, column=2, sticky='w', padx=8)
+
+        ttk.Label(set_frame, text="输出目录:").grid(row=1, column=0, sticky='e', padx=(0, 8), pady=4)
+        self.conv_out_var = tk.StringVar()
+        ttk.Entry(set_frame, textvariable=self.conv_out_var, font=("微软雅黑", 9)).grid(row=1, column=1, sticky='ew', pady=4)
+        ttk.Button(set_frame, text="浏览", command=self.conv_browse_out, width=8).grid(row=1, column=2, sticky='w', padx=8)
+
+        self.conv_per_chapter_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            set_frame, text="每章节单独生成一个文件（不勾选=整本合并成一个文件）",
+            variable=self.conv_per_chapter_var
+        ).grid(row=2, column=0, columnspan=3, sticky='w', padx=4, pady=4)
+
+        # ---- 封面设置（第一本书添加原始封面） ----
+        cover_row = ttk.Frame(set_frame)
+        cover_row.grid(row=3, column=0, columnspan=3, sticky='ew', padx=4, pady=4)
+        self.conv_cover_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(
+            cover_row, text="第一本书添加封面",
+            variable=self.conv_cover_var
+        ).pack(side=tk.LEFT)
+        self.conv_cover_path = None  # None=自动检测
+        ttk.Button(cover_row, text="选择封面图", command=self.conv_pick_cover, width=12).pack(side=tk.LEFT, padx=8)
+        self.conv_cover_lbl = ttk.Label(
+            cover_row, text="自动检测：0开头文件夹的封面（无则用第一张图）",
+            font=("微软雅黑", 8), foreground="gray")
+        self.conv_cover_lbl.pack(side=tk.LEFT)
+
+        # ---- 操作 + 进度 ----
+        ctrl_frame = ttk.Frame(self.page_convert)
+        ctrl_frame.grid(row=3, column=0, sticky='ew', padx=12, pady=6)
+        self.conv_full_btn = ttk.Button(
+            ctrl_frame, text="⚡ 一键整本合成", command=self.conv_start_full,
+            width=16, style="Accent.TButton")
+        self.conv_full_btn.pack(side=tk.LEFT)
+        ttk.Label(
+            ctrl_frame,
+            text="把要合并的文件夹全部加入列表，点此合成一本（自动封面）",
+            font=("微软雅黑", 8), foreground="gray"
+        ).pack(side=tk.LEFT, padx=6)
+        self.conv_start_btn = ttk.Button(ctrl_frame, text="开始转换", command=self.conv_start, width=14)
+        self.conv_start_btn.pack(side=tk.LEFT, padx=8)
+        self.conv_cancel_btn = ttk.Button(ctrl_frame, text="取消", command=self.conv_cancel, width=8, state=tk.DISABLED)
+        self.conv_cancel_btn.pack(side=tk.LEFT, padx=8)
+
+        self.conv_progress = ttk.Progressbar(ctrl_frame, maximum=100, length=360)
+        self.conv_progress.pack(side=tk.LEFT, padx=12)
+
+        # 日志区
+        log_frame = ttk.LabelFrame(self.page_convert, text="转换日志", style="Card.TLabelframe")
+        log_frame.grid(row=4, column=0, sticky='nsew', padx=12, pady=(6, 12))
+        self.page_convert.rowconfigure(4, weight=1)
+        log_frame.columnconfigure(0, weight=1)
+
+        self.conv_log_txt = tk.Text(log_frame, height=12, font=("Consolas", 9), state=tk.DISABLED, wrap=tk.WORD)
+        self.conv_log_txt.grid(row=0, column=0, sticky='nsew')
+        conv_log_scroll = ttk.Scrollbar(log_frame, command=self.conv_log_txt.yview)
+        conv_log_scroll.grid(row=0, column=1, sticky='ns')
+        self.conv_log_txt.configure(yscrollcommand=conv_log_scroll.set)
+
+        # 状态
+        self.conv_items = []
+        self.conv_cancel_event = None
+        self.conv_worker = None
+
+    def conv_append_log(self, text):
+        def _do():
+            try:
+                self.conv_log_txt.configure(state=tk.NORMAL)
+                self.conv_log_txt.insert(tk.END, text + "\n")
+                self.conv_log_txt.see(tk.END)
+                self.conv_log_txt.configure(state=tk.DISABLED)
+            except Exception:
+                pass
+        try:
+            self.root.after(0, _do)
+        except Exception:
+            pass
+
+    def conv_add_folders(self):
+        folders = filedialog.askdirectory(title="选择漫画文件夹（可多选，Ctrl选择多个）")
+        if not folders:
+            return
+        folders = folders.replace('/', '\\')
+        if folders not in self.conv_items:
+            self.conv_items.append(folders)
+            self.conv_listbox.insert(tk.END, folders)
+            self.conv_append_log(f"已添加: {folders}")
+
+    def conv_remove_selected(self):
+        sel = list(self.conv_listbox.curselection())
+        for idx in reversed(sel):
+            if 0 <= idx < len(self.conv_items):
+                self.conv_items.pop(idx)
+                self.conv_listbox.delete(idx)
+
+    def conv_clear_list(self):
+        self.conv_items.clear()
+        self.conv_listbox.delete(0, tk.END)
+
+    def conv_scan_subdirs(self):
+        """批量扫描：选择漫画根目录，自动把每个含图片的子文件夹作为一个转换任务加入列表"""
+        root_dir = filedialog.askdirectory(title="选择漫画根目录（自动扫描其子文件夹，批量添加）")
+        if not root_dir:
+            return
+        root_dir = root_dir.replace('/', '\\')
+        img_ext = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp')
+
+        def has_imgs(d):
+            try:
+                for f in os.listdir(d):
+                    if os.path.splitext(f)[1].lower() in img_ext:
+                        return True
+            except Exception:
+                pass
+            return False
+
+        candidates = []
+        if has_imgs(root_dir):
+            candidates.append(root_dir)
+        try:
+            for d in sorted(os.listdir(root_dir)):
+                p = os.path.join(root_dir, d)
+                if os.path.isdir(p) and has_imgs(p):
+                    candidates.append(p)
+        except Exception:
+            pass
+        if not candidates:
+            messagebox.showinfo("提示", "该目录下没有找到含图片的子文件夹", parent=self.root)
+            return
+        added = 0
+        for p in candidates:
+            if p not in self.conv_items:
+                self.conv_items.append(p)
+                self.conv_listbox.insert(tk.END, p)
+                added += 1
+        self.conv_append_log(f"批量扫描添加 {added} 个转换任务（列表共 {len(self.conv_items)} 个）")
+
+    def conv_browse_out(self):
+        d = filedialog.askdirectory(title="选择输出目录")
+        if d:
+            self.conv_out_var.set(d.replace('/', '\\'))
+
+    def conv_pick_cover(self):
+        """手动指定封面图（覆盖自动检测）"""
+        f = filedialog.askopenfilename(
+            title="选择封面图片（覆盖自动检测）",
+            filetypes=[("图片", "*.jpg *.jpeg *.png *.webp *.bmp"), ("所有文件", "*.*")])
+        if f:
+            self.conv_cover_path = f.replace('/', '\\')
+            self.conv_cover_lbl.config(text="已手动指定: " + os.path.basename(f))
+            self.conv_append_log(f"封面: {self.conv_cover_path}")
+
+    def conv_start(self):
+        """开始转换：使用界面当前设置"""
+        if not self.conv_items:
+            messagebox.showinfo("提示", "请先添加要转换的漫画文件夹", parent=self.root)
+            return
+        out_dir = self.conv_out_var.get().strip()
+        if not out_dir:
+            messagebox.showinfo("提示", "请选择输出目录", parent=self.root)
+            return
+        fmt = self.conv_fmt_var.get().strip().upper()
+        per_chapter = self.conv_per_chapter_var.get()
+        cover_use = self.conv_cover_var.get()
+        cover_path = self.conv_cover_path if cover_use else None
+        self._conv_run(fmt, per_chapter, cover_path)
+
+    def conv_start_full(self):
+        """一键整本合成：把列表里【多个文件夹】合并成一个文件（自动封面）"""
+        if not self.conv_items:
+            messagebox.showinfo("提示", "请先添加要转换的漫画文件夹", parent=self.root)
+            return
+        out_dir = self.conv_out_var.get().strip()
+        if not out_dir:
+            messagebox.showinfo("提示", "请选择输出目录", parent=self.root)
+            return
+        fmt = self.conv_fmt_var.get().strip().upper()
+
+        self.conv_start_btn.config(state=tk.DISABLED)
+        self.conv_full_btn.config(state=tk.DISABLED)
+        self.conv_cancel_btn.config(state=tk.NORMAL)
+        self.conv_cancel_event = threading.Event()
+        self.conv_progress.configure(maximum=100, value=0)
+
+        items = list(self.conv_items)
+        self.conv_append_log(f"—— 一键整本合成：{len(items)} 个文件夹合并为 1 个文件 ——")
+
+        def log(text):
+            self.conv_append_log(text)
+
+        def worker():
+            try:
+                ok, fails = convert_merge_folders(
+                    items, fmt, out_dir, log=log,
+                    cancel_event=self.conv_cancel_event, cover_path=None)
+                log(f"\n===== 合并完成：成功 {ok} 个文件，失败 {len(fails)} 个 =====")
+            except Exception as e:
+                log(f"  合并异常: {e}")
+            try:
+                self.root.after(0, lambda: self.conv_progress.configure(value=100))
+                self.root.after(0, self.conv_finish)
+            except Exception:
+                pass
+
+        self.conv_worker = threading.Thread(target=worker, daemon=True)
+        self.conv_worker.start()
+
+    def _conv_run(self, fmt, per_chapter, cover_path):
+        """转换任务统一执行（worker 线程）"""
+        out_dir = self.conv_out_var.get().strip()
+        try:
+            os.makedirs(out_dir, exist_ok=True)
+        except Exception as e:
+            messagebox.showerror("错误", f"无法创建输出目录: {e}", parent=self.root)
+            return
+
+        self.conv_start_btn.config(state=tk.DISABLED)
+        self.conv_full_btn.config(state=tk.DISABLED)
+        self.conv_cancel_btn.config(state=tk.NORMAL)
+        self.conv_cancel_event = threading.Event()
+        self.conv_progress.configure(maximum=100, value=0)
+
+        items = list(self.conv_items)
+        total = len(items)
+        done = [0]
+
+        def log(text):
+            self.conv_append_log(text)
+
+        def worker():
+            ok_total = 0
+            fail_total = 0
+            for i, folder in enumerate(items, 1):
+                if self.conv_cancel_event.is_set():
+                    log("—— 已取消 ——")
+                    break
+                log(f"\n[{i}/{total}] {folder}")
+                try:
+                    ok, fails = convert_comic_folder(
+                        folder, fmt, out_dir, per_chapter=per_chapter,
+                        log=log, cancel_event=self.conv_cancel_event,
+                        cover_path=cover_path)
+                    ok_total += ok
+                    fail_total += len(fails)
+                except Exception as e:
+                    log(f"  转换异常: {e}")
+                    fail_total += 1
+                done[0] = i
+                try:
+                    self.root.after(0, lambda: self.conv_progress.configure(value=int(done[0] / total * 100)))
+                except Exception:
+                    pass
+            log(f"\n===== 全部结束：成功 {ok_total} 个文件，失败 {fail_total} 个 =====")
+            try:
+                self.root.after(0, self.conv_finish)
+            except Exception:
+                pass
+
+        self.conv_worker = threading.Thread(target=worker, daemon=True)
+        self.conv_worker.start()
+
+    def conv_cancel(self):
+        if self.conv_cancel_event is not None:
+            self.conv_cancel_event.set()
+            self.conv_append_log("正在取消……")
+
+    def conv_finish(self):
+        self.conv_start_btn.config(state=tk.NORMAL)
+        self.conv_full_btn.config(state=tk.NORMAL)
+        self.conv_cancel_btn.config(state=tk.DISABLED)
+        # 转换完成后自动清空来源列表记录（方便下一批）
+        try:
+            self.conv_items.clear()
+            self.conv_listbox.delete(0, tk.END)
+            self.conv_append_log("已自动清空列表，可添加下一批漫画文件夹")
+        except Exception:
+            pass
+
 
 
 def main():
+    selftest.install_crash_hook()  # 未捕获异常自动写入 crash.log
     root = tk.Tk()
     app = GenericComicDownloaderGUI(root)
     # 代理检测移至后台：窗口先显示（避免阻塞启动），检测完成后再显示结果日志
