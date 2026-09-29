@@ -29,6 +29,11 @@ A manga downloader that runs on Windows and supports multiple manga websites: bu
 - **HTML source image download**: paste raw HTML → extract image URLs (src / data-src / data-original / data-lazy-src) and download with progress bar
 - Enhanced vs. the original tool: random User-Agent, automatic retry (x2), per-format saving (jpg/png/webp/gif), live progress, threaded (UI never blocks), full usage guide built into the page
 
+**v1.2.1 fix**: :wrench: **Self-check & stability fixes**:
+- **Startup script check fixed**: previously the self-check looked for `start.bat`/`start.vbs` and always reported them missing (the project actually uses `一键启动.bat`) — it now accepts any of `start.bat` / `start.vbs` / `一键启动.bat` / `一键启动.vbs`, so no more false "missing" warnings
+- **Summary verdict fixed**: the self-check summary only reports real problems now; optional-module warnings (e.g. `bs4`/`img2pdf`) no longer make the result show "异常"
+- **Optional dependencies installed**: `beautifulsoup4` + `img2pdf` added to the requirements list (fully optional, warnings removed on fresh installs)
+
 ---
 
 ## 1. UI Guide
@@ -232,7 +237,7 @@ lxml
 Install (admin shell):
 
 ```bat
-pip install DrissionPage aiohttp aiofiles execjs pycryptodome requests requests_file lxml
+pip install DrissionPage aiohttp aiofiles execjs pycryptodome requests requests_file lxml beautifulsoup4 img2pdf
 ```
 
 Node.js: https://nodejs.org/ (runtime for execjs).
