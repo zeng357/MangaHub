@@ -14,6 +14,11 @@ A manga downloader that runs on Windows and supports multiple manga websites: bu
 - **Auto-login**: after logging in once, the program automatically uses the saved container — no more QR scans
 - New **🔐 Password Manager** page (fold menu in the sidebar): view container status / set & change password / test password / clear container
 
+**v1.1.2 new features**: ❓ **Security Question verification** - set a **custom security question** when creating the container password (e.g. "What is my hobby?" / "Name of my favorite person", free text, no length limit):
+- Changing the password **requires answering the security question correctly** (retry allowed, no auto-destroy)
+- Answer stored as a salted hash (only THIS PC can verify; other computers cannot read it)
+- Forgot your password on this PC? Answer the security question -> reset a new password
+
 ---
 
 ## 1. UI Guide
