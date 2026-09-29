@@ -23,16 +23,23 @@ A manga downloader that runs on Windows and supports multiple manga websites: bu
 - **Vault access verification**: opening the :lock: Password Manager now requires the container password **even on this PC** - anyone trying to view or modify saved passwords must verify first. Browser auto-login/download stays seamless on this PC (device fingerprint); only the password vault itself demands verification
 - **Program integrity detection (anti-tamper)**: on first run the program fingerprints its own core files (AES-GCM encrypted, device-bound). If the program files are modified by anyone, startup warns you and the Password Manager **forces you to re-enter the container password** before use; a successful verification resets the integrity baseline (intended for your own program updates)
 
+**v1.2.0 new features**: :framed_picture: **Universal Image Downloader page** (inspired by KoManga-Utils, rebuilt & enhanced) — a new sidebar page between Format Converter and Password Manager:
+- **URL template download**: batch-download images from a URL pattern with `${key}` placeholder, e.g. `http://IP:8080/img/${key}.jpg` (start/end pages + thread count)
+- **Web page image download**: paste any web URL → auto-extract every `<img>` (incl. lazy `data-src`) and download them all — the fallback for sites without an adapter
+- **HTML source image download**: paste raw HTML → extract image URLs (src / data-src / data-original / data-lazy-src) and download with progress bar
+- Enhanced vs. the original tool: random User-Agent, automatic retry (x2), per-format saving (jpg/png/webp/gif), live progress, threaded (UI never blocks), full usage guide built into the page
+
 ---
 
 ## 1. UI Guide
 
-After launch (double-click `start.bat`), the main window has three pages in the left sidebar (plus a collapsible **🔐 Password Manager** menu below Format Converter):
+After launch (double-click `start.bat`), the main window has four pages in the left sidebar (plus a collapsible **🔐 Password Manager** menu below Universal Image Downloader):
 
 | Page | Purpose |
 |---|---|
 | 🏠 **Home** | Download comics: site selector, search, load chapter list, start download |
 | 🔄 **Format Converter** | Merge downloaded manga images into e-books (PDF/CBZ/EPUB/MOBI) |
+| 🖼 **Universal Image Downloader** | URL-template / web-page / HTML-source batch image download (built-in usage guide) |
 | 🔐 **Password Manager** | Click `🔐 密码管理 ▸` to expand → open the vault manager page (encrypted login containers) |
 | ⚙ **Settings** | Image naming, window, download and browser options |
 
@@ -169,6 +176,41 @@ After saving, refresh the site list: the new site works like built-in ones (sear
 
 - `chapters_scroll: true`: lazy-loaded chapter lists auto-scroll + click "load more" until complete
 - `scroll_to_load: true`: lazy-loaded chapter images are scrolled into view before extraction
+
+---
+
+## 3.5 Browser Guide (download needs a browser)
+
+The program drives a **local browser** to open target pages and collect chapter images. Here is how to use it with **Edge** or any other browser:
+
+### Recommended: Microsoft Edge
+
+- **Built into Windows** — the program auto-detects Edge, normally **no setup needed**
+- To verify/switch: Settings page → Browser Settings → choose `Edge`
+
+### Other browsers (Chrome / 360 / Firefox ...)
+
+1. Settings page → Browser Settings → select your browser type
+2. If the path is not auto-detected, click **Browse** and pick the browser EXE manually:
+
+| Browser | Typical path |
+|---|---|
+| **Edge** | `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe` |
+| **Chrome** | `C:\Program Files\Google\Chrome\Application\chrome.exe` |
+| **360 Safe** | `C:\Program Files (x86)\360\360se6\Application\360se.exe` |
+| **Firefox** | `C:\Program Files\Mozilla Firefox\firefox.exe` |
+
+3. Save and restart the program.
+
+### Logging into sites (QR / account)
+
+1. Check **Need login** on the Home page
+2. Click **Open Login** → the program opens the browser login page
+3. Scan the QR / sign in → click **Login Done**
+4. The login is stored as an **encrypted container**: next time this site needs login, the program auto-logs-in (no QR scan). See the vault section below.
+5. CAPTCHA / sliders: follow the on-page instructions (you may complete them manually in the browser window).
+
+> The browser window **closes automatically** after chapter loading / downloads finish — do not close it manually mid-download.
 
 ---
 
