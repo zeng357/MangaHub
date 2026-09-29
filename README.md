@@ -19,6 +19,10 @@ A manga downloader that runs on Windows and supports multiple manga websites: bu
 - Answer stored as a salted hash (only THIS PC can verify; other computers cannot read it)
 - Forgot your password on this PC? Answer the security question -> reset a new password
 
+**v1.1.3 new features**: :mag: **Vault Access Verification** & :shield: **Program Integrity Detection**:
+- **Vault access verification**: opening the :lock: Password Manager now requires the container password **even on this PC** - anyone trying to view or modify saved passwords must verify first. Browser auto-login/download stays seamless on this PC (device fingerprint); only the password vault itself demands verification
+- **Program integrity detection (anti-tamper)**: on first run the program fingerprints its own core files (AES-GCM encrypted, device-bound). If the program files are modified by anyone, startup warns you and the Password Manager **forces you to re-enter the container password** before use; a successful verification resets the integrity baseline (intended for your own program updates)
+
 ---
 
 ## 1. UI Guide
