@@ -34,6 +34,20 @@ A manga downloader that runs on Windows and supports multiple manga websites: bu
 - **Summary verdict fixed**: the self-check summary only reports real problems now; optional-module warnings (e.g. `bs4`/`img2pdf`) no longer make the result show "异常"
 - **Optional dependencies installed**: `beautifulsoup4` + `img2pdf` added to the requirements list (fully optional, warnings removed on fresh installs)
 
+**v1.3 new features**: :books: **Local Manga Library & One-Click Updates**:
+- New **📚 Local Library** sidebar page: pick any folder as your library root, scan it, and browse every downloaded manga with its chapters
+- **Check for Updates**: compares your local chapters against the site and lists exactly the missing chapters — **smart episode-number ("Total X") tracking** understands chapter folders named like `总676·双双被擒？` (no numeric prefix) as well as `808 总696·...` folders, so a library that is already up to date reports "up to date" instead of a wall of false misses
+- **Latest-episode comparison** in the status bar (local vs. site), plus a hint when your local folder has far fewer chapters than the site (chapters may be scattered in other folders)
+- **Download new chapters**: one click downloads every missing chapter straight into your library
+- **Check bad images**: verifies every downloaded image (magic bytes + minimum size), lists and deletes bad/unrelated images with automatic re-download (downloader-level too: images are checked right after each download)
+
+**v1.3.1 security upgrade**: :lock: **Argon2id key derivation** (OWASP-recommended, memory-hard, GPU brute-force resistant):
+- Vault password derivation upgraded from PBKDF2 to **Argon2id** (64 MiB / 3 iterations / 4 lanes); **AES-256-GCM** authenticated encryption retained for vault data
+- Old v1 vaults stay fully compatible and are **auto-upgraded to Argon2id** when you change the password
+- Fixed: destroyed vaults no longer count as password-protected for the main-program lock
+- Program-integrity lock now only activates **after a password has been set** (no popup on a fresh install); once set, modified program files require the password to unlock
+- Self-check Python-version comparison bug fixed (3.10 no longer misreported as old)
+
 ---
 
 ## 1. UI Guide
@@ -43,6 +57,7 @@ After launch (double-click `start.bat`), the main window has four pages in the l
 | Page | Purpose |
 |---|---|
 | 🏠 **Home** | Download comics: site selector, search, load chapter list, start download |
+| 📚 **Local Library** | Scan downloaded folders, browse chapters, **check for updates**, download new chapters, verify bad images |
 | 🔄 **Format Converter** | Merge downloaded manga images into e-books (PDF/CBZ/EPUB/MOBI) |
 | 🖼 **Universal Image Downloader** | URL-template / web-page / HTML-source batch image download (built-in usage guide) |
 | 🔐 **Password Manager** | Click `🔐 密码管理 ▸` to expand → open the vault manager page (encrypted login containers) |
@@ -80,7 +95,7 @@ ComicName/
 
 ### 🔐 Secure Login Vault (v1.1.1)
 
-Login sessions are stored in **encrypted containers** (`cookies/<site>_cookies.json`, AES-256-GCM + PBKDF2):
+Login sessions are stored in **encrypted containers** (`cookies/<site>_cookies.json`, AES-256-GCM + **Argon2id** key derivation since v1.3.1; PBKDF2 vaults from older versions remain readable and auto-upgrade):
 
 | Behavior | Description |
 |---|---|
@@ -229,6 +244,7 @@ aiohttp
 aiofiles
 execjs        # requires Node.js installed
 pycryptodome
+cryptography    # Argon2id (vault password derivation)
 requests
 requests_file
 lxml
@@ -237,7 +253,7 @@ lxml
 Install (admin shell):
 
 ```bat
-pip install DrissionPage aiohttp aiofiles execjs pycryptodome requests requests_file lxml beautifulsoup4 img2pdf
+pip install DrissionPage aiohttp aiofiles execjs pycryptodome cryptography requests requests_file lxml beautifulsoup4 img2pdf
 ```
 
 Node.js: https://nodejs.org/ (runtime for execjs).
